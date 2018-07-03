@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0 auto; padding:0 20px; width:100%; float:left; }
+      #messages li { padding: 5px 10px; }
+      
+      ul#messages li{width:auto;padding:8px 2%;margin-bottom:10px;clear:both;border-radius:15px}
+	li.user-1{float:left;background:#eee}
+	li.user-2{float:right;background:#f5f79c}
+ul#messages li span{font-weight:bold}
+.msg-wrap{width:100%;margin:0 auto}
+
+    </style>
+  </head>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+        var username = prompt('What\'s your username?');
+			  var userClass = "1"
+
+			  $(function () {
+			    var socket = io();
+			    socket.emit('user_id',username);
+			    $('form').submit(function(){
+			      var chatObject = {user: username, text: $('#m').val()};
+			      socket.emit('chat message',chatObject );
+			      $('#m').val('');
+			      return false;
+			    });
+			    socket.on('chat message', function(msg){
+						if(username === msg.user){
+							userClass = "2"
+						}else{
+							userClass ="1"
+						}
+
+						$('#messages').append($('<li class="user-'+ userClass +'">').html('<span>'+msg.user+'</span>' + ' : '+ msg.text));
+			    });
+			  });
+		</script>
+<body>
+<div class="msg-wrap">
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" autofocus /><button>Send</button>
+    </form>
+</div>
+</body>
+</html>
