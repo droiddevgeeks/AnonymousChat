@@ -16,24 +16,28 @@
 	li.user-2{float:right;background:#f5f79c}
 ul#messages li span{font-weight:bold}
 .msg-wrap{width:100%;margin:0 auto}
-
+.typing-here {position: fixed;top: 0;left: 0;width: 100%;text-align: center; margin: 0 auto;}
+.typing-here span {padding: 5px 10px;border-radius: 15px;background: #b7f7b1}
     </style>
   </head>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 		<script>
         var username = prompt('What\'s your username?');
-			  var userClass = "1"
+				var userClass = "1";
 
 			  $(function () {
 			    var socket = io();
 			    socket.emit('user_id',username);
-			    $('form').submit(function(){
+			    $('form').submit(function(){						
 			      var chatObject = {user: username, text: $('#m').val()};
 			      socket.emit('chat message',chatObject );
-			      $('#m').val('');
+						$('#m').val('');
+						$('.msg-wrap > .typing-here').empty();
+						socket.emit('submit');
 			      return false;
-			    });
+					});
+					
 			    socket.on('chat message', function(msg){
 						if(username === msg.user){
 							userClass = "2"
@@ -42,15 +46,49 @@ ul#messages li span{font-weight:bold}
 						}
 
 						$('#messages').append($('<li class="user-'+ userClass +'">').html('<span>'+msg.user+'</span>' + ' : '+ msg.text));
-			    });
-			  });
+					});
+
+					socket.on('submit', function(){
+						$('.msg-wrap > .typing-here').empty();
+					});
+					
+					//Emit typing
+					$('#m').bind("keypress", function (event) {
+ 							var key = event.which;
+ 							if(key == 13){
+ 							   $('button').click();
+ 							   return false;  
+ 							 }
+						socket.emit('typing');
+					});
+					
+					//Listen on typing
+					socket.on('typing', (user) => {
+						if(user.username !== username){
+							$('.msg-wrap > .typing-here').html('<span>'+user.username+ ' is typing a message...'+'</span>');
+						}
+					});	
+
+					$( window ).unload(function() {
+ 					 socket.emit('disconnect');
+					});
+				
+					//Listen on exit
+					socket.on('disconnect', (user) => {
+						if(user.username !== username){
+							$('.msg-wrap > .typing-here').html('<span>'+user.username+ ' left chat...'+'</span>');
+						}
+					});	
+
+			});
 		</script>
 <body>
 <div class="msg-wrap">
     <ul id="messages"></ul>
     <form action="">
-      <input id="m" autocomplete="off" autofocus /><button>Send</button>
-    </form>
+      <input id="m" autocomplete="off" /><button>Send</button>
+		</form>
+		<div class="typing-here"></div>
 </div>
 </body>
 </html>

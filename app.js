@@ -9,6 +9,8 @@ res.sendFile(__dirname + '/index.html');
 
 io.on('connection', function(socket){
 
+		//default username
+		socket.username = "Anonymous"
 		socket.on('user_id', function(username) {
       socket.username = username;
 		 	console.log(socket.username + ' connected to chat');
@@ -19,8 +21,19 @@ io.on('connection', function(socket){
 		  io.emit('chat message', msg);
 		});
 
+		//listen on typing
+    socket.on('typing', function() {
+    	io.emit('typing', {username : socket.username})
+		})
+		
+		//listen on typing
+    socket.on('submit', function() {
+    	io.emit('submit');
+    })
+
 		socket.on('disconnect', function(){
-	    console.log('user disconnected');
+			console.log(socket.username+ ' user disconnected');
+			io.emit('disconnect', {username : socket.username})
   	});
 });
 
